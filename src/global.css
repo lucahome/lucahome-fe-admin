@@ -1,0 +1,38 @@
+/* scrollbar */
+@import 'simplebar-react/dist/simplebar.min.css';
+
+.admin-table {
+    font-family: 'Cabin' !important;
+	padding: 0 10px;
+}
+.admin-table .check-date {
+	font-family: 'Cabin';
+	border-radius: 2px;
+}
+.admin-table .check-date input {
+	padding: 3px 6px;
+	border: 1px solid #999999;
+	border-radius: 3px;
+}
+
+.admin-table .select-option {
+    margin-bottom: 20px !important;
+	font-family: 'Cabin';
+}
+.filled-room {
+    text-align: center !important;
+	background-color: #fff8dc9e !important;
+}
+.empty-room {
+    text-align: center !important;
+	background-color: #8fbc8fad !important;
+}
+
+.booking-byRoom-table {
+    font-family: 'Cabin' !important;
+}
+
+.booking-by-room {
+    margin: 20px 0px !important;
+    font-family: 'Cabin' !important;
+}
