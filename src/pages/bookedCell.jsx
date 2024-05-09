@@ -129,6 +129,12 @@ const InfiniteScrollTable = (props) => {
       <p>
         SĐT: {slot.booking.contactPhone} - {slot.booking.contactChannel}
       </p>
+      <p>
+        Số người: {slot.booking.totalCustomer}
+      </p>
+      {/* <p>
+        Mã khóa: {slot.booking.passcode}
+      </p> */}
       {slot.booking.status === 'PENDING' && <p style={{ color: 'red' }}>Đang thanh toán . . .</p>}
       <div>
         <Button onClick={handleOpen} style={{marginTop: '-12px', marginBottom: '5px'}}>CCCD</Button>

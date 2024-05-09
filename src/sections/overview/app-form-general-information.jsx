@@ -19,6 +19,7 @@ export default function AppFormGeneralInformation() {
         tiktok: '',
         phoneNumber: '',
         zalo: '',
+        passcode: '',
         images: []
       });
 
@@ -52,6 +53,7 @@ export default function AppFormGeneralInformation() {
           const data = {
               facebook: formData.facebook,
               tiktok: formData.tiktok,
+              passcode: formData.passcode,
               phoneNumber: formData.phoneNumber,
               zalo: formData.zalo,
               images: formData.images
@@ -103,6 +105,7 @@ export default function AppFormGeneralInformation() {
                     setFormData({
                       facebook: info?.data?.facebook,
                       tiktok: info?.data?.tiktok,
+                      passcode: info?.data?.passcode,
                       phoneNumber: info?.data?.phoneNumber,
                       zalo: info?.data?.zalo,
                       images: info?.data?.images
@@ -113,6 +116,7 @@ export default function AppFormGeneralInformation() {
                 setFormData({
                   facebook: 'Link facebook',
                   tiktok: 'Link tiktok',
+                  passcode: 'Mật mã khóa cố định',
                   phoneNumber: 'Số điện thoại',
                   zalo: 'Số zalo',
                   images: []
@@ -175,6 +179,18 @@ export default function AppFormGeneralInformation() {
             variant="outlined"
             name="zalo"
             value={formData.zalo}
+            onChange={handleChange}
+            margin="normal"
+          />
+        </Box>
+
+        <Box mt={3}>
+          <TextField
+            fullWidth
+            label="Mã khóa cố định"
+            variant="outlined"
+            name="passcode"
+            value={formData.passcode}
             onChange={handleChange}
             margin="normal"
           />
