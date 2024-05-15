@@ -132,6 +132,9 @@ const InfiniteScrollTable = (props) => {
       <p>
         Số người: {slot.booking.totalCustomer}
       </p>
+      <p>
+        Ghi chú: {slot.booking.note}
+      </p>
       {/* <p>
         Mã khóa: {slot.booking.passcode}
       </p> */}
