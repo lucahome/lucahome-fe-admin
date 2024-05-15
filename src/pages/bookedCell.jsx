@@ -9,6 +9,7 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
 import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
@@ -36,11 +37,15 @@ const InfiniteScrollTable = (props) => {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
+  const [note, setNote] = React.useState(slot.booking.note);
+
   const token = localStorage.getItem('token')
 
 
   // dialog delete
   const [dialogOpen, setDialogOpen] = React.useState(false);
+  // dialog delete
+  const [dialogNoteOpen, setDialogNoteOpen] = React.useState(false);
 
   // toast send email
   const [toastInfo, setToastInfo] = React.useState({
@@ -89,6 +94,10 @@ const InfiniteScrollTable = (props) => {
     setDialogOpen(true);
   };
 
+  const handleOpenNoteDialog = () => {
+    setDialogNoteOpen(true);
+  };
+
   const handleAgree = async (bookingId) => {
     try {
       const result = await axios.post(
@@ -112,6 +121,30 @@ const InfiniteScrollTable = (props) => {
     setDialogOpen(false)
   };
 
+  const handleNoteAgree = async (bookingId) => {
+    try {
+      console.log('note', note);
+      const result = await axios.post(
+        'https://booking-kohl-six.vercel.app/booking/addNote',
+        { bookingId, note },
+        {
+          headers: {
+            Authorization: token,
+          },
+        }
+      );
+      console.log('\n - handleAgree - result:', result);
+    } catch (error) {
+      console.log('ADD NOTE BOOKING ERROR', error);
+    }
+    setDialogNoteOpen(false)
+    subimitSearch()
+  };
+
+  const handleNoteCancel = () => {
+    setDialogNoteOpen(false)
+  };
+
   return (
     <div>
       <p>
@@ -132,12 +165,6 @@ const InfiniteScrollTable = (props) => {
       <p>
         Số người: {slot.booking.totalCustomer}
       </p>
-      <p>
-        Ghi chú: {slot.booking.note}
-      </p>
-      {/* <p>
-        Mã khóa: {slot.booking.passcode}
-      </p> */}
       {slot.booking.status === 'PENDING' && <p style={{ color: 'red' }}>Đang thanh toán . . .</p>}
       <div>
         <Button onClick={handleOpen} style={{marginTop: '-12px', marginBottom: '5px'}}>CCCD</Button>
@@ -158,7 +185,10 @@ const InfiniteScrollTable = (props) => {
           </Box>
         </Modal>
       </div>
-      <Button color="error" variant="outlined" onClick={hanleOpenDialog}>
+      <Button color= { slot.booking.note ? "info" : "info"} variant={ slot.booking.note ? "contained" : "text"} onClick={handleOpenNoteDialog}>
+        Ghi chú
+      </Button>
+      <Button color="error" variant="outlined" onClick={hanleOpenDialog} style={{marginLeft: '10px'}}>
         Xóa
       </Button>
       <Button color="success" variant="outlined" style={{marginLeft: '10px'}} onClick={() => handleSendMail(slot.booking.bookingId)}>
@@ -193,6 +223,36 @@ const InfiniteScrollTable = (props) => {
         <DialogActions>
           <Button onClick={handleCancel}>Hủy</Button>
           <Button onClick={() => handleAgree(slot.booking.bookingId)} autoFocus>
+            Đồng ý
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={dialogNoteOpen}
+        onClose={handleClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          Ghi chú
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            {slot.booking.note}
+          </DialogContentText>
+            <TextField
+            id="filled-multiline-static"
+            label="Multiline"
+            multiline
+            rows={4}
+            defaultValue={note}
+            variant="filled"
+            onChange={(e) => setNote(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleNoteCancel}>Hủy</Button>
+          <Button onClick={() => handleNoteAgree(slot.booking.bookingId)} autoFocus>
             Đồng ý
           </Button>
         </DialogActions>
