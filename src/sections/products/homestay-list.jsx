@@ -34,6 +34,10 @@ export default function HomeStayList() {
     const [isShowCreateHomeStay, setIsShowCreateHomeStay] = useState(false);
     const [openConfirmDeleted, setOpenConfirmDeleted] = useState(false);
 
+    
+    const [branchList, setBranchList] = useState([]);
+    const [newBranch, setNewBranch] = useState('');
+
     const token = localStorage.getItem('token')
 
     const [formData, setFormData] = useState({
@@ -188,7 +192,6 @@ export default function HomeStayList() {
     };
 
     const onChangeImages = (images) => {
-      console.log('images', images);
       setFormData((prevData) => ({
         ...prevData,
         images
@@ -228,8 +231,42 @@ export default function HomeStayList() {
         threeHoursSpecial: selectedRoom?.customPrice?.priceList?.threeHours || 0,
         weekSpecial: selectedRoom?.customPrice?.priceList?.week || 0,
         startSpecialDate: moment(selectedRoom?.customPrice?.date?.from || momentTimezone().tz('Asia/Ho_Chi_Minh')),
-        endSpecialDate: moment(selectedRoom?.customPrice?.date?.to || momentTimezone().tz('Asia/Ho_Chi_Minh'))
+        endSpecialDate: moment(selectedRoom?.customPrice?.date?.to || momentTimezone().tz('Asia/Ho_Chi_Minh')),
+        branchId: selectedRoom?.branchId
       });
+    }
+
+     // đổi thông tin chi nhánh
+    const handleChangeBranch = (e) => {
+      setFormData(prev => ({
+        ...prev,
+        branchId: e.target.value
+      }));
+    }
+
+    // thêm chi nhánh
+    const handleAddBranch = async (e) => {
+      try {
+        const data = {
+          name: newBranch
+        };
+        let addBranch = await axios.post(`${import.meta.env.VITE_URL_BACKEND || 'https://luca-home.vercel.app'}/branch`, data, {
+          headers: {
+            Authorization: token 
+          }
+        });
+        addBranch = addBranch?.data;
+        if (addBranch?.code === 1000) {
+          const newBranchResult = {
+            id: addBranch?.data?.id,
+            name: addBranch?.data?.name
+          }
+          setBranchList(prev => ([...prev, newBranchResult]));
+          setNewBranch('');
+        }
+    } catch (error) {
+        console.log(`ERROR when call add branch ${error.message} -- ${JSON.stringify(error)}`);
+    } 
     }
 
     const deletedHomeStay = async () => {
@@ -280,9 +317,24 @@ export default function HomeStayList() {
         }
     }
 
+    // lấy thông tin danh sách chi nhánh
+    const fetchBranchList = async () => {
+      try {
+          let brachListResult = await axios.get(`${import.meta.env.VITE_URL_BACKEND || 'https://luca-home.vercel.app'}/branch`);
+          brachListResult = brachListResult?.data;
+          if (brachListResult?.code === 1000) {
+            setBranchList(brachListResult?.data);
+          }
+      } catch (error) {
+          console.log(`ERROR when call get list branch ${error.message} -- ${JSON.stringify(error)}`);
+      }
+    };
+
     useEffect(() => {
 
       fetchHomeStay();
+
+      fetchBranchList();
     }, [])
     
 
@@ -375,6 +427,39 @@ export default function HomeStayList() {
                         onChange={handleChange}
                         margin="normal"
                       />
+                    </Box>
+                    <Box mt={3}>
+                      <FormControl fullWidth variant="outlined">
+                        <InputLabel id="select-branch-label">Chi nhánh</InputLabel>
+                        <Select
+                          fullWidth
+                          labelId="select-branch-label"
+                          id="select-branch"
+                          label="Chi nhánh"
+                          value={formData.branchId}
+                          onChange={handleChangeBranch}
+                        >
+                          {branchList.map((branch, index) => (
+                            <MenuItem key={index} value={branch.id} divider>
+                              {branch.name}
+                            </MenuItem>
+                          ))}
+                          <Box sx={{ display: 'flex', p: 2 }}>
+                            <TextField
+                              value={newBranch}
+                              onChange={(e) => setNewBranch(e.target.value)}
+                              onKeyDown={(e) => e.stopPropagation()}
+                              label="Thêm chi nhánh"
+                              variant="outlined"
+                              size="small"
+                              sx={{ mr: 1 }}
+                            />
+                            <Button variant={_.isEmpty(newBranch) ? "outlined" : "contained"} disabled={_.isEmpty(newBranch)} color="primary" onClick={handleAddBranch}>
+                              +
+                            </Button>
+                          </Box>
+                        </Select>
+                      </FormControl>
                     </Box>
                     <Box mt={3}>
                       <TextField
