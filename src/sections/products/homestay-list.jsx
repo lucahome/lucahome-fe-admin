@@ -15,6 +15,9 @@ import momentTimezone from 'moment-timezone'
 
 import { Box, Select, MenuItem, Container, TextField, Typography, InputLabel, FormControl, Button, Grid, Divider, Dialog, DialogActions, DialogContent, DialogTitle  } from '@mui/material';
 import Snackbar from '@mui/material/Snackbar';
+import Iconify from 'src/components/iconify';
+import { ChromePicker } from 'react-color'
+import IconButton from '@mui/material/IconButton';
 import Alert from '@mui/material/Alert';
 import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
 import numeral from 'numeral';
@@ -33,10 +36,14 @@ export default function HomeStayList() {
     const [selectRoomTitle, setSelectRoomTitle] = useState('');
     const [isShowCreateHomeStay, setIsShowCreateHomeStay] = useState(false);
     const [openConfirmDeleted, setOpenConfirmDeleted] = useState(false);
+    const [openDialogBranch, setOpenDialogBranch] = useState(false);
 
-    
+    // chi nhánh cần chỉnh sửa, hoặc thêm mới
+    const [editBranch, setEditBranch] = useState({});
+    // cờ check là chỉnh sửa hay thêm mới chi nhánh
+    const [isEditBranch, setIsEditBranch] = useState(false);
+
     const [branchList, setBranchList] = useState([]);
-    const [newBranch, setNewBranch] = useState('');
 
     const token = localStorage.getItem('token')
 
@@ -139,6 +146,7 @@ export default function HomeStayList() {
         projector: formData.projector,
         rule: formData.rule,
         wifi: formData.wifi,
+        branchId: formData.branchId
       }
 
       if(formData.threeHoursSpecial !== 0 && formData.daySpecial !== 0 && formData.weekSpecial !== 0 && formData.overNightSpecial !== 0){
@@ -236,7 +244,7 @@ export default function HomeStayList() {
       });
     }
 
-     // đổi thông tin chi nhánh
+    // đổi thông tin chi nhánh
     const handleChangeBranch = (e) => {
       setFormData(prev => ({
         ...prev,
@@ -244,29 +252,16 @@ export default function HomeStayList() {
       }));
     }
 
-    // thêm chi nhánh
-    const handleAddBranch = async (e) => {
-      try {
-        const data = {
-          name: newBranch
-        };
-        let addBranch = await axios.post(`${import.meta.env.VITE_URL_BACKEND || 'https://luca-home.vercel.app'}/branch`, data, {
-          headers: {
-            Authorization: token 
-          }
-        });
-        addBranch = addBranch?.data;
-        if (addBranch?.code === 1000) {
-          const newBranchResult = {
-            id: addBranch?.data?.id,
-            name: addBranch?.data?.name
-          }
-          setBranchList(prev => ([...prev, newBranchResult]));
-          setNewBranch('');
-        }
-    } catch (error) {
-        console.log(`ERROR when call add branch ${error.message} -- ${JSON.stringify(error)}`);
-    } 
+    const renderValue = (value) => {
+      const branchInfo = _.find(branchList, { id: value});
+      return branchInfo?.name || ''
+    };
+
+    // xử lý mở dialog thêm mới hay chỉnh sửa branch
+    const handleDialogBranch = (branch) => {
+      setEditBranch(branch);
+      setIsEditBranch(!_.isEmpty(branch));
+      setOpenDialogBranch(true);
     }
 
     const deletedHomeStay = async () => {
@@ -303,6 +298,47 @@ export default function HomeStayList() {
     }
     const onCloseConfirmDelete = () => {
       setOpenConfirmDeleted(false);
+    }
+
+    // xử lý đóng dialog chi nhánh
+    const onCloseDialogBranch = () => {
+      setOpenDialogBranch(false);
+    }
+
+    // xử lý thông tin tên của chi nhánh cần chỉnh sửa, thêm mới
+    const handleChangeEditBranch = (e) => {
+      setEditBranch(prev => ({...prev, name: e.target.value}))
+    }
+
+    // xử lý thêm màu cho chi nhánh
+    const handleChangeColorBranch = (e) => {
+      setEditBranch(prev => ({
+        ...prev,
+        color: e.hex
+      }))
+    }
+
+    // cập nhật và thêm mới chi nhánh
+    const handleEditAndAddBranch = async () => {
+      try {
+        const data = {
+          name: editBranch?.name,
+          color: editBranch?.color
+        };
+        if(!_.isNil(editBranch?.id))data.id = editBranch.id
+        let addBranch = await axios.post(`${import.meta.env.VITE_URL_BACKEND || 'https://booking-kohl-six.vercel.app'}/branch`, data, {
+          headers: {
+            Authorization: token 
+          }
+        });
+        addBranch = addBranch?.data;
+        if (addBranch?.code === 1000) {
+          await fetchBranchList();
+          onCloseDialogBranch();
+        }
+      } catch (error) {
+          console.log(`ERROR when call add branch ${error.message} -- ${JSON.stringify(error)}`);
+      } 
     }
 
     const fetchHomeStay = async () => {
@@ -436,25 +472,21 @@ export default function HomeStayList() {
                           labelId="select-branch-label"
                           id="select-branch"
                           label="Chi nhánh"
-                          value={formData.branchId}
+                          value={formData?.branchId || -1}
                           onChange={handleChangeBranch}
+                          renderValue={renderValue}
                         >
                           {branchList.map((branch, index) => (
-                            <MenuItem key={index} value={branch.id} divider>
-                              {branch.name}
-                            </MenuItem>
+                              <MenuItem key={index} value={branch.id} divider sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span> {branch.name}</span>
+                                <IconButton  edge="end" onClick={() => handleDialogBranch(branch)}>
+                                  <Iconify icon='ri:edit-line' />
+                                </IconButton>
+                              </MenuItem>
+                              
                           ))}
-                          <Box sx={{ display: 'flex', p: 2 }}>
-                            <TextField
-                              value={newBranch}
-                              onChange={(e) => setNewBranch(e.target.value)}
-                              onKeyDown={(e) => e.stopPropagation()}
-                              label="Thêm chi nhánh"
-                              variant="outlined"
-                              size="small"
-                              sx={{ mr: 1 }}
-                            />
-                            <Button variant={_.isEmpty(newBranch) ? "outlined" : "contained"} disabled={_.isEmpty(newBranch)} color="primary" onClick={handleAddBranch}>
+                          <Box sx={{ display: 'flex', p: 2, justifyContent: 'end' }}>
+                            <Button variant="contained" color="primary" onClick={() => handleDialogBranch({})}>
                               +
                             </Button>
                           </Box>
@@ -1041,6 +1073,38 @@ export default function HomeStayList() {
                   <Button onClick={() => deletedHomeStay()} color="error" variant="contained">
                     Có
                   </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/*  diaglog thêm mới, chỉnh sửa chi nhánh */}
+            <Dialog open={openDialogBranch} onClose={onCloseDialogBranch} fullWidth maxWidth="xs">
+                <DialogTitle style={{fontWeight: 'normal'}}>{ !isEditBranch ? 'Thêm mới chi nhánh' : 'Chỉnh sửa chi nhánh'}</DialogTitle>
+                <DialogContent>
+                  <Box mt={3}>
+                    <TextField
+                      fullWidth
+                      label="Chi nhánh"
+                      variant="outlined"
+                      name="edit-branch"
+                      value={editBranch?.name}
+                      onChange={handleChangeEditBranch}
+                      margin="normal"
+                    />
+                  </Box>
+                  <Box mt={3}>
+                    <Grid2 container spacing={6}>
+                      <Grid2 xs={3} md={3} sm={3} sx={{ marginRight: '2em'}}>
+                        <div style={{minWidth: '100px', minHeight: '50px', backgroundColor: editBranch?.color, border: _.isEmpty(editBranch?.color) ? '1px solid black' : '', borderRadius: '5px'}}> </div>
+                      </Grid2>
+                      <Grid2 xs={6} md={6} sm={6}>
+                        <ChromePicker color={editBranch?.color || '#fff'} onChangeComplete={handleChangeColorBranch}  />
+                      </Grid2>
+                    </Grid2>
+                  </Box>
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={onCloseDialogBranch} color="primary">Đóng</Button>
+                  <Button onClick={handleEditAndAddBranch} color="success" variant="contained">{ !isEditBranch ? 'Thêm' : 'Lưu'}</Button>
                 </DialogActions>
             </Dialog>
           </>)}
